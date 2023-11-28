@@ -1,0 +1,132 @@
+-- Altair conky project.
+-- By VRG
+-- Conky commands: https://conky.sourceforge.net/variables.html
+-- https://gist.github.com/maxrodrigo/8581aad1e493346cc63406e82380ebce
+
+conky.config = {
+	background = true,
+	use_xft = true,
+	font = 'Metropolis Medium:size=9',
+	xftalpha = 0.8,
+	update_interval = 1,
+	total_run_times = 0,
+	own_window = true,
+	own_window_type = 'normal',
+	own_window_transparent = true,
+	own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager',
+	double_buffer = true,
+	draw_blended = false,
+	draw_shades = false,
+	draw_outline = false,
+	draw_borders = false,
+	draw_graph_borders = true,
+	imlib_cache_size = 0,
+	stippled_borders = 0,
+	border_margin = '5',
+	border_width = 1,
+	default_color = '#000000',
+	default_shade_color = '#000000',
+	default_outline_color = '#000000',
+	default_bar_width = 180,
+	default_bar_height = 7,
+	minimum_width = 500, minimum_height = 400,
+	maximum_width = 480,
+	gap_x = 0,
+	gap_y = 0,
+	alignment = 'top_left', 
+	no_buffers = true,
+	uppercase = false,
+	cpu_avg_samples = 2,
+	net_avg_samples = 2,
+	short_units = true,
+	text_buffer_size = 2048,
+	use_spacer = 'none',
+	override_utf8_locale = true,
+	lua_load = '~/.conky/Altair/rings.lua ~/.conky/Altair/time.lua ~/.conky/Altair/update_cover.lua ~/.conky/Altair/set_cpu_temp_color.lua ~/.conky/Altair/check_hwmon_name.lua ~/.conky/Altair/total_home.lua',
+	lua_draw_hook_pre = 'ring_stats',
+
+
+-- Color scheme #
+	default_color = 'white',
+	color1 = 'white',
+	color2 = '#FD7F00',
+	color3 = '#F5F24C',
+	color4 = '#A2BCD5',
+	
+-- Conky color palete: http://www.colorhunter.com/tag/conky/1
+	
+	own_window_argb_value = 0,
+	own_window_argb_visual = true,
+	own_window_colour = '#000000',
+	
+};
+
+conky.text = [[
+${offset 50}${color2}${font Metropolis Black:size=45} .${color1}${time %A}
+${offset 75}${voffset -25}${font Metropolis Medium:size=14}${time %d %B}
+${offset 220}${voffset -19}${color1}${font Metropolis Medium:size=14}${execi 100 cat ~/.cache/eleg-weather.json | jq -r '.name'}
+# --- WOEID (Location id) --- #
+${execi 300 ~/.conky/Altair/scripts/weather.sh}\
+\
+${offset 75}${voffset 0}${execi 100 ~/.conky/Altair/scripts/weather-icon.sh white $(cat ~/.cache/eleg-weather.json | jq -r '.weather[0].icon')}${image ~/.cache/eleg-weather-icon.png -p 84,100 -s 50x50}
+${offset 150}${voffset 0}${font StyleBats:size=25}${execi 100 ~/.conky/Altair/scripts/kelvin2celsius.sh $(cat ~/.cache/eleg-weather.json | jq '.main.temp')} ºC
+${image ~/.conky/Altair/line.png -p 75,175 -s 315x1}
+#--- Hardware info --- 
+${offset 130}${voffset -20}${font Metropolis Medium:size=9}Cpu${color3}
+${offset 130}${voffset }${font Metropolis Medium:size=9}${cpu cpu0}%${color1}
+${offset 130}${voffset 5}${font Metropolis Medium:size=9}Temp${color3}
+#--${lua_parse check_hwmon_name temp 1} 
+${offset 130}${voffset }${font Metropolis Medium:size=9}${hwmon 4 temp 1} C${color1}
+${offset 240}${voffset -40}${font Metropolis Medium:size=9}${color1}Mem${color3}
+${offset 240}${font Metropolis Medium:size=9}$memperc %${color2}
+${offset 350}${voffset -40}${font Metropolis Medium:size=9}${color1}Root${color3}
+${offset 350}${font Metropolis Medium:size=9}${fs_used_perc /}%
+${offset 350}${voffset 5}${font Metropolis Medium:size=9}${color1}Home${color3}
+${offset 350}${font Metropolis Medium:size=9}${fs_used_perc /home}%
+#--${offset 350}${font Metropolis Medium:size=9}${lua home}%
+
+# --- Clock ---
+${voffset 10}${offset 75}${color1}${font Radio Space:size=14}Time is ${lua Hour}.${lua Minute}
+
+# --- Network Info ---
+${offset 75}Network:
+${offset 200}${downspeedgraph enp4s0 20,185 f0f0f0 4043ff -t -l}
+${offset 200}${voffset 10}${upspeedgraph enp4s0 20,185 f0f0f0 ed4550 -t -l}
+${offset 75}${image ~/.conky/Altair/icons/down_white.png -p 75, 357 -s 20x20}
+${offset 110}${voffset -60}${downspeed enp4s0}/s
+${offset 75}${image ~/.conky/Altair/icons/up_white.png -p 75, 387 -s 20x20}
+${offset 110}${voffset -10}${upspeed enp4s0}/s
+
+
+# --- Get Spotify Info ---
+${if_running spotify}
+${color1}${goto 210}${voffset 90}${execbar ~/.conky/Altair/conky-spotify/scripts/time_bar.sh}${color1}
+${exec ~/.conky/Altair/conky-spotify/scripts/cover.sh}
+# --- Show wallpaper and cover ---
+#--${image ~/.conky/Altair/conky-spotify/background.png -p 70, 350 -s 410x130}
+${image ~/.conky/Altair/conky-spotify/note_white.png -p 210, 480 -s 15x15}
+${lua_parse update_cover}
+${image ~/.conky/Altair/line.png -p 75, 450 -s 315x1}
+# --- Show now playing information ---
+${voffset -200}
+${goto 235}${font Metropolis Black:size=9}Now Playing:${color3}
+${goto 210}${voffset 5}${font Metropolis Black:size=17}${exec ~/.conky/Altair/conky-spotify/scripts/title.sh}${color1}
+${goto 245}${voffset -5}${font Metropolis Black:size=10}${exec ~/.conky/Altair/conky-spotify/scripts/artist.sh}
+#--${color1}${goto 210}${exec ~/.conky/Altair/conky-spotify/scripts/time.sh}${color1}
+#--${goto 255}${font Metropolis Medium:size=10}(${exec ~/.conky/Altair/conky-spotify/scripts/album.sh})${color1}
+${endif}
+
+# --- Top processes ---
+#--${offset 75}${voffset 10}${font Arial:bold:size=10}${color1}TOP PROCESSES ${color8}${hr 3}
+#--${offset 75}${voffset 2}${font StyleBats:size=10}${color1}${voffset -3}${font}${color6} ${top_mem name 1}${goto 215}${top_mem mem_res 1}${alignr}${top_mem mem 1}%
+#--${offset 75}${voffset 2}${font StyleBats:size=10}${color1}${voffset -3}${font}${color6} ${top_mem name 2}${goto 215}${top_mem mem_res 2}${alignr}${top_mem mem 2}%
+#--${offset 75}${voffset 2}${font StyleBats:size=10}${color1}${voffset -3}${font}${color6} ${top_mem name 3}${goto 215}${top_mem mem_res 3}${alignr}${top_mem mem 3}%
+#--${offset 75}${voffset 2}${font StyleBats:size=10}${color1}${voffset -3}${font}${color6} ${top_mem name 4}${goto 215}${top_mem mem_res 4}${alignr}${top_mem mem 4}%
+
+#-- ${execi 100 cat ~/.cache/eleg-weather.json | jq -r '.weather[0].main'}
+#--${offset 143}${voffset 1}${color1}${font Metropolis Medium:size=9}wind speed in your location is ${execi 100 (cat ~/.cache/eleg-weather.json | jq '.wind.speed')}km/h
+#--${offset 143}${voffset 1}${color1}${font Metropolis Medium:size=9}and Humidity is ${execi 100 (cat ~/.cache/eleg-weather.json | jq '.main.humidity')}%
+
+]];
+
+
